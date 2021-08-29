@@ -29,6 +29,15 @@ class CONFIG:
         return open("server.info", "r").readlines();
 
 
+class Data:
+    user_id = bytearray(4)
+    version = bytearray(1)
+    op = bytearray(1)
+    name_len = bytearray(2)
+    filename = bytearray()
+    size = bytearray(4)
+    Payload = bytearray()
+
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     HOST = CONFIG.ip()  # The server's hostname or IP address
