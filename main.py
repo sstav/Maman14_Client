@@ -70,9 +70,16 @@ class Data:
         s.connect((HOST, int(PORT)))
         self.op = 100
         self.name_len = len(filename)
+        print("self.name_len:")
+        print(self.name_len)
         self.size = getSize(file_to_send)
-        s.send(self.pack_data_202())
-        s.send(filename)
+        s.send(self.pack_data())
+        s.send(struct.pack('<B', 65))
+        s.send(struct.pack('<B', 65))
+        s.send(struct.pack('<B', 65))
+        s.send(struct.pack('<B', 65))
+        s.send(struct.pack('<B', 65))
+        s.send(struct.pack('<B', 0))
 
         data = file_to_send.read(1024)
         while data:
@@ -87,6 +94,10 @@ class Data:
     def pack_data_202(self):
         return struct.pack('<I', self.user_id) + struct.pack('<B', self.version) + struct.pack('<B', self.op)
 
+    def pack_data(self):
+        return struct.pack('<I', self.user_id) + struct.pack('<B', self.version) + struct.pack('<B', self.op) + \
+               struct.pack('<H', self.name_len) + struct.pack('<I', self.size)
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
@@ -99,7 +110,6 @@ if __name__ == '__main__':
         s.close()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         client.request_save_file(files[0])
-
 
     # print('Received', repr(data))
     print("Bye")
