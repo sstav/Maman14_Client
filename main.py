@@ -74,16 +74,12 @@ class Data:
         print(self.name_len)
         self.size = getSize(file_to_send)
         s.send(self.pack_data())
-        s.send(struct.pack('<B', 65))
-        s.send(struct.pack('<B', 65))
-        s.send(struct.pack('<B', 65))
-        s.send(struct.pack('<B', 65))
-        s.send(struct.pack('<B', 65))
-        s.send(struct.pack('<B', 0))
-
+        s.send(str.encode(filename))
+        file_to_send = open(filename, "rb")
         data = file_to_send.read(1024)
         while data:
             s.send(data)
+            print(data)
             data = file_to_send.read(1024)
         file_to_send.close()
 
@@ -108,8 +104,9 @@ if __name__ == '__main__':
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         files = client.request_list_backup()
         s.close()
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        client.request_save_file(files[0])
+    for file in files:
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            client.request_save_file(file)
 
     # print('Received', repr(data))
     print("Bye")
