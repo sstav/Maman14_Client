@@ -1,10 +1,8 @@
 # This is a sample Python script.
 import socket
 import os
-
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+import struct
+import sys
 
 
 def print_hi(name):
@@ -31,7 +29,7 @@ class CONFIG:
 
     @staticmethod
     def rand_key():
-        return os.urandom(4)
+        return int.from_bytes(os.urandom(4), sys.byteorder)
 
     @staticmethod
     def version():
@@ -40,45 +38,45 @@ class CONFIG:
 
 class Data:
     def __init__(self):
-        self.user_id = bytearray(4)  # Size 4
-        self.version = bytearray(1)  # Size 1
-        self.op = bytearray(1)  # Size 1
-        self.name_len = bytearray(2)  # Size 2
-        self.filename = bytearray()  # Size filename Content Pointer
-        self.size = bytearray(4)  # Size 4
-        self.payload = bytearray()  # Size Payload Content Pointer
-        # Init data constructor:
-        self.version.append(CONFIG.version())
-        self.user_id.extend(CONFIG.rand_key())
+        self.user_id = CONFIG.rand_key()  # Size 4
+        self.version = CONFIG.version()  # Size 1
+        self.op = 0  # Size 1
+        self.name_len = 0  # Size 2
+        self.filename = 0  # Size filename Content Pointer
+        self.size = 0  # Size 4
+        self.payload = 0  # Size Payload Content Pointer
 
     def request_list_backup(self):
-        self.op = bytearray(0)
-        self.op.append(202)
-        me_byte = bytearray()
-        me_byte.extend(self.pack_data())
-
+        self.op = 202
         s.connect((HOST, int(PORT)))
-        s.sendall(me_byte)
+        s.sendall(self.pack_data_202())
         get_data = s.recv(1024)
-        print("Data Res: " + get_data)
+        get_data = get_data.decode("utf-8")
+        list_files = get_data.split("\n")
+        del list_files[-1]
+        print("BackUp List: ")
+        for file_name in list_files:
+            print(file_name)
+        print(list_files)
+        return list_files
 
-    def pack_data(self):
-        temp_buffer = bytearray(0)
-        self.user_id.reverse()
-        self.version.reverse()
-        self.op.reverse()
-        self.name_len.reverse()
-        self.filename.reverse()
-        self.size.reverse()
-        self.payload.reverse()
-        temp_buffer.extend(self.user_id)
-        temp_buffer.extend(self.version)
-        temp_buffer.extend(self.op)
-        temp_buffer.extend(self.name_len)
-        temp_buffer.extend(self.filename)
-        temp_buffer.extend(self.size)
-        temp_buffer.extend(self.payload)
-        return temp_buffer
+    def request_save_file(self, filename):
+        s.connect((HOST, int(PORT)))
+        file_to_send = open("img.png", "rb")
+        data = file_to_send.read(1024)
+        while data:
+            s.send(data)
+            data = file_to_send.read(1024)
+        file_to_send.close()
+
+        print(s.recv(1024))
+        s.shutdown(2)
+        s.close()
+
+
+    def pack_data_202(self):
+        return struct.pack('<I', self.user_id) + struct.pack('<B', self.version) + struct.pack('<B', self.op)
+
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
