@@ -79,7 +79,6 @@ class Data:
         data = file_to_send.read(1024)
         while data:
             s.send(data)
-            print(data)
             data = file_to_send.read(1024)
         file_to_send.close()
 
