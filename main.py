@@ -50,7 +50,7 @@ class Data:
         self.op = 202
         s.connect((HOST, int(PORT)))
         s.sendall(self.pack_data_202())
-        get_data = s.recv(1024)
+        get_data = s.recv(8096)
         get_data = get_data.decode("utf-8")
         list_files = get_data.split("\n")
         del list_files[-1]
@@ -61,8 +61,19 @@ class Data:
         return list_files
 
     def request_save_file(self, filename):
+        def getSize(fileobject):
+            fileobject.seek(0, 2)  # move the cursor to the end of the file
+            size = fileobject.tell()
+            return size
+
+        file_to_send = open(filename, "rb")
         s.connect((HOST, int(PORT)))
-        file_to_send = open("img.png", "rb")
+        self.op = 100
+        self.name_len = len(filename)
+        self.size = getSize(file_to_send)
+        s.send(self.pack_data_202())
+        s.send(filename)
+
         data = file_to_send.read(1024)
         while data:
             s.send(data)
@@ -72,7 +83,6 @@ class Data:
         print(s.recv(1024))
         s.shutdown(2)
         s.close()
-
 
     def pack_data_202(self):
         return struct.pack('<I', self.user_id) + struct.pack('<B', self.version) + struct.pack('<B', self.op)
@@ -84,9 +94,12 @@ if __name__ == '__main__':
     PORT = CONFIG.port()  # The port used by the server
     KEY = CONFIG.rand_key()
     client = Data()
-
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        client.request_list_backup()
+        files = client.request_list_backup()
+        s.close()
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        client.request_save_file(files[0])
+
 
     # print('Received', repr(data))
     print("Bye")
