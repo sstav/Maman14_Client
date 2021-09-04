@@ -57,7 +57,6 @@ class Data:
         print("BackUp List: ")
         for file_name in list_files:
             print(file_name)
-        print(list_files)
         return list_files
 
     def request_save_file(self, filename):
@@ -70,8 +69,6 @@ class Data:
         s.connect((HOST, int(PORT)))
         self.op = 100
         self.name_len = len(filename)
-        print("self.name_len:")
-        print(self.name_len)
         self.size = getSize(file_to_send)
         s.send(self.pack_data())
         s.send(str.encode(filename))
@@ -82,7 +79,9 @@ class Data:
             data = file_to_send.read(1024)
         file_to_send.close()
 
-        print(s.recv(1024))
+        get_data = s.recv(8096)
+        get_data = get_data.decode("utf-8")
+        print(get_data)
         s.shutdown(2)
         s.close()
 
